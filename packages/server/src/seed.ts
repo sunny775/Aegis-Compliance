@@ -89,13 +89,16 @@ export async function seedCorpus(providers: Providers): Promise<SeedResult> {
     documents += 1;
   }
 
-  // Pre-run the matched-pair showcase (cached thereafter).
+  // Pre-run the matched-pair showcase (cached thereafter). Can be disabled with
+  // SEED_PRERUN_GAP=false for fast boots that don't re-bill the model.
   let gapReport = false;
-  try {
-    await providers.gaps.analyze(SHOWCASE.standardId, SHOWCASE.procedureId);
-    gapReport = true;
-  } catch (err) {
-    console.error('Gap pre-run failed (continuing):', err instanceof Error ? err.message : err);
+  if (process.env.SEED_PRERUN_GAP !== 'false') {
+    try {
+      await providers.gaps.analyze(SHOWCASE.standardId, SHOWCASE.procedureId);
+      gapReport = true;
+    } catch (err) {
+      console.error('Gap pre-run failed (continuing):', err instanceof Error ? err.message : err);
+    }
   }
 
   return { documents, gapReport };
