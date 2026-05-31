@@ -1,18 +1,25 @@
-import type { DocumentRecord, GapReport } from '../domain/types';
+import type { Chunk, DocumentRecord, GapReport } from '../domain/types';
 
 /**
  * DocumentRepository — persistence behind an interface so storage can move from
- * in-memory to SQLite/Postgres without touching business logic. Implemented by
- * `InMemoryDocumentRepository` for the demo. See ARCHITECTURE.md §4.4, §9.
+ * in-memory to SQLite/Postgres without touching business logic. Owns documents,
+ * chunk metadata, and cached analyses. Implemented by `InMemoryDocumentRepository`
+ * for the demo. See ARCHITECTURE.md §4.4, §9.
  */
 export interface DocumentRepository {
-  /** TODO: persist (or upsert) a document record. */
+  /** Persist (or upsert) a document record. */
   save(doc: DocumentRecord): Promise<void>;
-  /** TODO: fetch a document by id. */
+  /** Fetch a document by id. */
   getById(id: string): Promise<DocumentRecord | undefined>;
-  /** TODO: list all documents for the dashboard. */
+  /** List all documents for the dashboard. */
   list(): Promise<DocumentRecord[]>;
-  // TODO: cache gap reports keyed by (standardDocId, procedureDocId, contentHash) — ARCHITECTURE.md §8.6
+
+  /** Persist the chunk metadata for a document (search vectors live in the VectorStore). */
+  saveChunks(docId: string, chunks: Chunk[]): Promise<void>;
+  /** Fetch the chunks previously stored for a document. */
+  getChunks(docId: string): Promise<Chunk[]>;
+
+  // Gap reports cached by (standardDocId, procedureDocId) — ARCHITECTURE.md §8.6.
   saveGapReport(report: GapReport): Promise<void>;
   getGapReport(standardDocId: string, procedureDocId: string): Promise<GapReport | undefined>;
 }
