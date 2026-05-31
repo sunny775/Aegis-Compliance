@@ -14,6 +14,8 @@ import { StructureAwareChunker } from './chunking/StructureAwareChunker';
 import { RecursiveChunker } from './chunking/RecursiveChunker';
 import { InMemoryDocumentRepository } from './repositories/InMemoryDocumentRepository';
 import { IngestionService } from './services/IngestionService';
+import { SummaryService } from './services/SummaryService';
+import { DocumentService } from './services/DocumentService';
 
 /**
  * The wired application graph. Services receive their dependencies by
@@ -30,6 +32,8 @@ export interface Providers {
   chunker: Chunker;
   repository: DocumentRepository;
   ingestion: IngestionService;
+  summaries: SummaryService;
+  documents: DocumentService;
 }
 
 export function createProviders(config: AppConfig): Providers {
@@ -51,6 +55,8 @@ export function createProviders(config: AppConfig): Providers {
     vectorStore,
     repository,
   });
+  const summaries = new SummaryService({ llm, repository });
+  const documents = new DocumentService(repository, summaries);
 
   return {
     config,
@@ -62,5 +68,7 @@ export function createProviders(config: AppConfig): Providers {
     chunker,
     repository,
     ingestion,
+    summaries,
+    documents,
   };
 }

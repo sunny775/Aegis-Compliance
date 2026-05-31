@@ -21,3 +21,10 @@ export class LLMError extends AppError {
     super('LLM_ERROR', message, 502);
   }
 }
+
+/** A requested resource (document, etc.) does not exist. */
+export class NotFoundError extends AppError {
+  constructor(message: string) {
+    super('NOT_FOUND', message, 404);
+  }
+}
