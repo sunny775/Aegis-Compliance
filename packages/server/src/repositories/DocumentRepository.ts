@@ -19,7 +19,11 @@ export interface DocumentRepository {
   /** Fetch the chunks previously stored for a document. */
   getChunks(docId: string): Promise<Chunk[]>;
 
-  // Gap reports cached by (standardDocId, procedureDocId) — ARCHITECTURE.md §8.6.
-  saveGapReport(report: GapReport): Promise<void>;
-  getGapReport(standardDocId: string, procedureDocId: string): Promise<GapReport | undefined>;
+  // Gap reports cached by (standardDocId, procedureDocId, contentHash) — ARCHITECTURE.md §7.4, §8.6.
+  saveGapReport(report: GapReport, contentHash: string): Promise<void>;
+  getGapReport(
+    standardDocId: string,
+    procedureDocId: string,
+    contentHash: string,
+  ): Promise<GapReport | undefined>;
 }

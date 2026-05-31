@@ -17,6 +17,7 @@ import { IngestionService } from './services/IngestionService';
 import { SummaryService } from './services/SummaryService';
 import { DocumentService } from './services/DocumentService';
 import { QAService } from './services/QAService';
+import { GapAnalysisService } from './services/GapAnalysisService';
 
 /**
  * The wired application graph. Services receive their dependencies by
@@ -36,6 +37,7 @@ export interface Providers {
   summaries: SummaryService;
   documents: DocumentService;
   qa: QAService;
+  gaps: GapAnalysisService;
 }
 
 export function createProviders(config: AppConfig): Providers {
@@ -60,6 +62,7 @@ export function createProviders(config: AppConfig): Providers {
   const summaries = new SummaryService({ llm, repository });
   const documents = new DocumentService(repository, summaries);
   const qa = new QAService({ llm, embeddings, vectorStore, repository });
+  const gaps = new GapAnalysisService({ llm, embeddings, vectorStore, repository });
 
   return {
     config,
@@ -74,5 +77,6 @@ export function createProviders(config: AppConfig): Providers {
     summaries,
     documents,
     qa,
+    gaps,
   };
 }

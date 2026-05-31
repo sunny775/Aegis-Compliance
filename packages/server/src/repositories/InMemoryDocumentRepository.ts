@@ -30,18 +30,19 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     return this.chunks.get(docId) ?? [];
   }
 
-  async saveGapReport(report: GapReport): Promise<void> {
-    this.gapReports.set(gapKey(report.standardDocId, report.procedureDocId), report);
+  async saveGapReport(report: GapReport, contentHash: string): Promise<void> {
+    this.gapReports.set(gapKey(report.standardDocId, report.procedureDocId, contentHash), report);
   }
 
   async getGapReport(
     standardDocId: string,
     procedureDocId: string,
+    contentHash: string,
   ): Promise<GapReport | undefined> {
-    return this.gapReports.get(gapKey(standardDocId, procedureDocId));
+    return this.gapReports.get(gapKey(standardDocId, procedureDocId, contentHash));
   }
 }
 
-function gapKey(standardDocId: string, procedureDocId: string): string {
-  return `${standardDocId}::${procedureDocId}`;
+function gapKey(standardDocId: string, procedureDocId: string, contentHash: string): string {
+  return `${standardDocId}::${procedureDocId}::${contentHash}`;
 }
