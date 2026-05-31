@@ -16,6 +16,7 @@ import { InMemoryDocumentRepository } from './repositories/InMemoryDocumentRepos
 import { IngestionService } from './services/IngestionService';
 import { SummaryService } from './services/SummaryService';
 import { DocumentService } from './services/DocumentService';
+import { QAService } from './services/QAService';
 
 /**
  * The wired application graph. Services receive their dependencies by
@@ -34,6 +35,7 @@ export interface Providers {
   ingestion: IngestionService;
   summaries: SummaryService;
   documents: DocumentService;
+  qa: QAService;
 }
 
 export function createProviders(config: AppConfig): Providers {
@@ -57,6 +59,7 @@ export function createProviders(config: AppConfig): Providers {
   });
   const summaries = new SummaryService({ llm, repository });
   const documents = new DocumentService(repository, summaries);
+  const qa = new QAService({ llm, embeddings, vectorStore, repository });
 
   return {
     config,
@@ -70,5 +73,6 @@ export function createProviders(config: AppConfig): Providers {
     ingestion,
     summaries,
     documents,
+    qa,
   };
 }
