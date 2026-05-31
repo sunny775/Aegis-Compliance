@@ -121,6 +121,17 @@ Node + TS + Express                                         (packages/server)
 
 ---
 
+## Deployment
+
+- **One command locally:** `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build` → web on `:5173`, API on `:4000` (the API seeds `docs/` and pre-runs the Tyre↔RS13 report on boot).
+- **Cloud:** API on **Railway** (Dockerfile at `packages/server/Dockerfile`), web on **Vercel** (`packages/web`, with `VITE_API_URL` → the Railway URL and the API's `CORS_ORIGIN` → the Vercel URL).
+
+Full step-by-step (env vars, health check, key-safety check, and the single-service `/api` alternative) is in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+> **Could the backend serve the frontend on `/`?** Yes, and for a demo it's tempting (one origin, no CORS). The catch: the SPA's client route `/documents/:id` collides with the API's `GET /documents/:id`, so doing it cleanly means mounting the API under `/api` first. The Railway + Vercel split avoids the collision with no code changes and puts the SPA behind a CDN — so that's the documented default.
+
+---
+
 ## AI Engineering
 
 The guiding constraint: **every AI-generated claim must be traceable to a cited clause and page** — an uncitable answer in a compliance setting is worse than no answer. That drives the choices below.
