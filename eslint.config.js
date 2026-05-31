@@ -23,4 +23,11 @@ module.exports = tseslint.config(
       ],
     },
   },
+  {
+    // Tests mock the Anthropic SDK with lightweight fakes; allow `any` there.
+    files: ['**/tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 );
