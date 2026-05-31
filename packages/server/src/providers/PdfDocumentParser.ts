@@ -21,7 +21,7 @@ interface PdfDocProxy {
   getPage(n: number): Promise<PdfPageProxy>;
 }
 interface PdfjsModule {
-  getDocument(src: { data: Uint8Array }): { promise: Promise<PdfDocProxy> };
+  getDocument(src: { data: Uint8Array; verbosity?: number }): { promise: Promise<PdfDocProxy> };
 }
 
 // pdf.js is ESM-only; this indirection performs a real dynamic import that
@@ -56,7 +56,8 @@ export class PdfDocumentParser implements DocumentParser {
 
 async function extractPagesWithPdfjs(file: Buffer): Promise<ParsedPage[]> {
   const pdfjs = await importPdfjs();
-  const doc = await pdfjs.getDocument({ data: new Uint8Array(file) }).promise;
+  // verbosity 0 = errors only (silences benign "standardFontDataUrl" warnings).
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(file), verbosity: 0 }).promise;
   const pages: ParsedPage[] = [];
   for (let n = 1; n <= doc.numPages; n++) {
     const page = await doc.getPage(n);

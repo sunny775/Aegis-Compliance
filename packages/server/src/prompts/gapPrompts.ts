@@ -21,15 +21,15 @@ export const REQUIREMENT_EXTRACTION_SYSTEM = [
   'clause references, or pages.',
 ].join(' ');
 
+export const requirementItemSchema = z.object({
+  text: z.string().min(1),
+  clauseRef: z.string(),
+  page: z.number().int().positive(),
+  category: z.string(),
+});
 export const requirementsResultSchema = z.object({
-  requirements: z.array(
-    z.object({
-      text: z.string().min(1),
-      clauseRef: z.string(),
-      page: z.number().int().positive(),
-      category: z.string(),
-    }),
-  ),
+  // Default to [] so a section the model returns no requirements for doesn't fail validation.
+  requirements: z.array(requirementItemSchema).default([]),
 });
 
 export const requirementsJsonSchema: JsonSchema = {

@@ -11,6 +11,9 @@ const envSchema = z.object({
   CLAUDE_MODEL_REASONING: z.string().min(1).default('claude-sonnet-4-6'),
   PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGIN: z.string().url().default('http://localhost:5173'),
+  // Mock auth (identification only, per the brief / ARCHITECTURE.md §12).
+  AUTH_USERNAME: z.string().min(1).default('admin'),
+  AUTH_PASSWORD: z.string().min(1).default('compliance-demo'),
 });
 
 /** Strongly-typed, validated application configuration. */
@@ -19,6 +22,7 @@ export interface AppConfig {
   models: { cheap: string; reasoning: string };
   port: number;
   corsOrigin: string;
+  auth: { username: string; password: string };
 }
 
 /**
@@ -39,5 +43,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     models: { cheap: e.CLAUDE_MODEL_CHEAP, reasoning: e.CLAUDE_MODEL_REASONING },
     port: e.PORT,
     corsOrigin: e.CORS_ORIGIN,
+    auth: { username: e.AUTH_USERNAME, password: e.AUTH_PASSWORD },
   };
 }

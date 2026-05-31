@@ -28,3 +28,17 @@ export class NotFoundError extends AppError {
     super('NOT_FOUND', message, 404);
   }
 }
+
+/** Request body / params failed validation at the HTTP boundary. */
+export class ValidationError extends AppError {
+  constructor(message: string) {
+    super('VALIDATION_ERROR', message, 400);
+  }
+}
+
+/** Authentication failed (mock login). */
+export class UnauthorizedError extends AppError {
+  constructor(message: string) {
+    super('UNAUTHORIZED', message, 401);
+  }
+}

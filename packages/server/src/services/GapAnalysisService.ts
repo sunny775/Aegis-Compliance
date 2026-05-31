@@ -16,7 +16,6 @@ import { NotFoundError } from '../http/errors';
 import {
   REQUIREMENT_EXTRACTION_SYSTEM,
   requirementsJsonSchema,
-  requirementsResultSchema,
   REQUIREMENTS_TOOL_NAME,
   REQUIREMENTS_TOOL_DESCRIPTION,
   GAP_CLASSIFICATION_SYSTEM,
@@ -24,6 +23,7 @@ import {
   gapVerdictResultSchema,
   GAP_VERDICT_TOOL_NAME,
   GAP_VERDICT_TOOL_DESCRIPTION,
+  requirementItemSchema,
   buildExtractionUserMessage,
   buildClassificationUserMessage,
   type GapEvidencePassage,
@@ -95,8 +95,17 @@ export class GapAnalysisService {
 
     const requirements = await this.extractRequirements(standardDocId);
     const verdicts = await mapWithConcurrency(requirements, this.concurrency, async (req) => {
-      const passages = await this.retrieveProcedure(req, procedureDocId);
-      return this.classifyCoverage(req, passages);
+      try {
+        const passages = await this.retrieveProcedure(req, procedureDocId);
+        return await this.classifyCoverage(req, passages);
+      } catch (err) {
+        // One flaky classification must not abort the whole report.
+        console.error(
+          `Classification failed for ${req.id} (§${req.clauseRef}):`,
+          err instanceof Error ? err.message : err,
+        );
+        return fallbackVerdict(req);
+      }
     });
 
     const report = aggregateReport(standardDocId, procedureDocId, verdicts);
@@ -167,19 +176,35 @@ export class GapAnalysisService {
     standardTitle: string,
     sectionText: string,
   ): Promise<Array<Omit<Requirement, 'id'>>> {
-    const completion = await this.llm.complete(
-      [{ role: 'user', content: buildExtractionUserMessage(standardTitle, sectionText) }],
-      {
-        model: REASONING,
-        maxTokens: 1500,
-        temperature: 0,
-        system: REQUIREMENT_EXTRACTION_SYSTEM,
-        jsonSchema: requirementsJsonSchema,
-        toolName: REQUIREMENTS_TOOL_NAME,
-        toolDescription: REQUIREMENTS_TOOL_DESCRIPTION,
-      },
-    );
-    return validateStructured(requirementsResultSchema, completion.structured).requirements;
+    let completion;
+    try {
+      completion = await this.llm.complete(
+        [{ role: 'user', content: buildExtractionUserMessage(standardTitle, sectionText) }],
+        {
+          model: REASONING,
+          maxTokens: 1500,
+          temperature: 0,
+          system: REQUIREMENT_EXTRACTION_SYSTEM,
+          jsonSchema: requirementsJsonSchema,
+          toolName: REQUIREMENTS_TOOL_NAME,
+          toolDescription: REQUIREMENTS_TOOL_DESCRIPTION,
+        },
+      );
+    } catch (err) {
+      console.error('Requirement extraction call failed for a section (skipping):', err);
+      return [];
+    }
+
+    // Validate per item and keep the well-formed ones, so a single malformed
+    // entry never discards a whole section's requirements (faithfulness guard, §8.2).
+    const raw = completion.structured as { requirements?: unknown[] } | null;
+    const items = Array.isArray(raw?.requirements) ? raw.requirements : [];
+    const valid: Array<Omit<Requirement, 'id'>> = [];
+    for (const item of items) {
+      const parsed = requirementItemSchema.safeParse(item);
+      if (parsed.success) valid.push(parsed.data);
+    }
+    return valid;
   }
 
   /** Step 2 — embed the requirement and retrieve top-k PROCEDURE chunks. */
@@ -213,6 +238,20 @@ export function aggregateReport(
   const total = verdicts.length;
   const coverageScore = total === 0 ? 0 : Math.round((counts.FULL / total) * 100);
   return { standardDocId, procedureDocId, coverageScore, counts, matrix: verdicts };
+}
+
+/** Conservative verdict used when a per-requirement classification fails. */
+function fallbackVerdict(requirement: Requirement): GapVerdict {
+  return {
+    requirement,
+    status: 'MISSING',
+    severity: 'Medium',
+    standardCitation: { clauseRef: requirement.clauseRef, page: requirement.page },
+    procedureCitation: null,
+    evidenceQuote: '',
+    rationale: 'Automated classification was unavailable for this requirement.',
+    recommendedAction: 'Review this requirement manually against the procedure.',
+  };
 }
 
 /** Group chunks into per-section batches under a character budget. */

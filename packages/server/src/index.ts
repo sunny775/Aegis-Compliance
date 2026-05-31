@@ -1,30 +1,29 @@
 import 'dotenv/config'; // loads packages/server/.env into process.env (cwd-relative)
-import express from 'express';
-import cors from 'cors';
 import { loadConfig } from './config';
 import { createProviders } from './composition';
-import { errorMiddleware } from './http/errorMiddleware';
+import { createApp } from './http/app';
+import { seedCorpus } from './seed';
 
 // Fail fast on invalid configuration before binding the port.
 const config = loadConfig();
 
-// Composition root: construct and wire the provider layer once. Services that
-// consume these are added in later phases. (No model download happens here —
-// the embedding pipeline loads lazily on first use.)
+// Composition root: construct and wire the application graph once.
 const providers = createProviders(config);
-
-const app = express();
-app.use(cors({ origin: config.corsOrigin }));
-app.use(express.json());
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
-
-// Error middleware must be registered last.
-app.use(errorMiddleware);
+const app = createApp(providers);
 
 app.listen(config.port, () => {
   console.log(`Server listening on http://localhost:${config.port}`);
-  console.log(`Provider layer wired: ${Object.keys(providers).join(', ')}`);
+
+  // Seed the corpus + pre-run the Tyre↔RS13 report. Never let a seed failure
+  // crash the server — log and continue.
+  seedCorpus(providers)
+    .then((result) => {
+      console.log(
+        `Seed complete: ${result.documents} documents ingested` +
+          (result.gapReport ? '; Tyre↔RS13 gap report pre-run' : '; gap pre-run skipped'),
+      );
+    })
+    .catch((err) => {
+      console.error('Seed failed (continuing):', err instanceof Error ? err.message : err);
+    });
 });

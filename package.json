@@ -23,7 +23,10 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "sharp",
+      "protobufjs",
+      "onnxruntime-node"
     ]
   }
 }
