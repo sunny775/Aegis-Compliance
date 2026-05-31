@@ -19,6 +19,14 @@ export function useDocument(id: string) {
   });
 }
 
+export function useDocumentChunks(id: string) {
+  return useQuery({
+    queryKey: [...documentKeys.detail(id), 'chunks'],
+    queryFn: () => api.getChunks(id),
+    enabled: id.length > 0,
+  });
+}
+
 export function useUploadDocument(onProgress?: (fraction: number) => void) {
   const queryClient = useQueryClient();
   return useMutation({

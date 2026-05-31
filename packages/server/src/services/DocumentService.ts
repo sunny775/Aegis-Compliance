@@ -1,4 +1,4 @@
-import type { DocumentRecord, KeyPoint } from '../domain/types';
+import type { Chunk, DocumentRecord, KeyPoint } from '../domain/types';
 import type { DocumentRepository } from '../repositories/DocumentRepository';
 import type { SummaryService } from './SummaryService';
 import { NotFoundError } from '../http/errors';
@@ -32,5 +32,11 @@ export class DocumentService {
 
   async getKeyPoints(docId: string): Promise<KeyPoint[]> {
     return this.summaries.extractKeyPoints(docId);
+  }
+
+  /** The document's chunks (for the Full Text view + citation anchors). */
+  async getChunks(docId: string): Promise<Chunk[]> {
+    await this.get(docId); // 404 if the document is unknown
+    return this.repository.getChunks(docId);
   }
 }

@@ -1,5 +1,6 @@
 import type {
   ApiErrorBody,
+  Chunk,
   DocType,
   DocumentDetail,
   DocumentRecord,
@@ -79,6 +80,10 @@ export const api = {
 
   getDocument(id: string): Promise<DocumentDetail> {
     return getJson<DocumentDetail>(`/documents/${encodeURIComponent(id)}`);
+  },
+
+  getChunks(id: string): Promise<Chunk[]> {
+    return getJson<Chunk[]>(`/documents/${encodeURIComponent(id)}/chunks`);
   },
 
   /** Upload with progress (XHR — fetch has no upload progress event). */

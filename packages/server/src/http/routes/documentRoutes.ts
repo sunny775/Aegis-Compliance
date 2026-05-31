@@ -60,6 +60,14 @@ export function documentRoutes(providers: Providers): Router {
     }),
   );
 
+  // GET /documents/:id/chunks — stored chunks for the Full Text view.
+  router.get(
+    '/:id/chunks',
+    asyncHandler(async (req, res) => {
+      res.json(await providers.documents.getChunks(req.params.id!));
+    }),
+  );
+
   // POST /documents/:id/qa — grounded answer with citations.
   router.post(
     '/:id/qa',

@@ -26,7 +26,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/dashboard', label: 'Documents', icon: <DashboardRoundedIcon fontSize="small" /> },
   { to: '/upload', label: 'Upload', icon: <CloudUploadRoundedIcon fontSize="small" /> },
-  { to: '/gap-analysis', label: 'Gap analysis', icon: <RuleRoundedIcon fontSize="small" />, disabled: true },
+  { to: '/gap-analysis', label: 'Gap analysis', icon: <RuleRoundedIcon fontSize="small" /> },
 ];
 
 export function AppShell() {

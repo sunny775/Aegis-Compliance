@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UploadPage } from './pages/UploadPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
+import { GapAnalysisPage } from './pages/GapAnalysisPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ export function App() {
                     <Route index element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/upload" element={<UploadPage />} />
+                    <Route path="/gap-analysis" element={<GapAnalysisPage />} />
                     <Route path="/documents/:id" element={<DocumentDetailPage />} />
                   </Route>
                 </Route>

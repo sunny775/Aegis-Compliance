@@ -34,6 +34,23 @@ export interface DocumentDetail extends DocumentRecord {
   keyPoints: KeyPoint[];
 }
 
+export interface ChunkMetadata {
+  docId: string;
+  docType: DocType;
+  subDocId?: string;
+  sectionPath: string[];
+  clauseRef: string;
+  headingTrail: string;
+  page: number;
+  charRange: [number, number];
+}
+
+export interface Chunk {
+  id: string;
+  text: string;
+  metadata: ChunkMetadata;
+}
+
 export interface Citation {
   clauseRef: string;
   page: number;
