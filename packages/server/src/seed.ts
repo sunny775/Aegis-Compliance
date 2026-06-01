@@ -28,6 +28,12 @@ const CORPUS: SeedDoc[] = [
     docType: 'procedure',
   },
   {
+    id: 'rs13',
+    file: 'recognised-standard-13 (tyre_wheel_rim).pdf',
+    title: 'Recognised Standard 13 — Tyre, Wheel and Rim Management',
+    docType: 'standard',
+  },
+  /* {
     id: 'acme-mine',
     file: 'ACME-Mine.pdf',
     title: 'ACME Mine — SHMS Document Set',
@@ -46,17 +52,11 @@ const CORPUS: SeedDoc[] = [
     docType: 'standard',
   },
   {
-    id: 'rs13',
-    file: 'recognised-standard-13 (tyre_wheel_rim).pdf',
-    title: 'Recognised Standard 13 — Tyre, Wheel and Rim Management',
-    docType: 'standard',
-  },
-  {
     id: 'rs17',
     file: 'recognised-standard-17.pdf',
     title: 'Recognised Standard 17 — Hazardous chemicals',
     docType: 'standard',
-  },
+  }, */
 ];
 
 export interface SeedResult {
