@@ -2,9 +2,9 @@
 
 > Upload Queensland coal-mining safety documents and get plain-English summaries, a grounded Q&A chat, and a **clause-level gap analysis** between a site procedure and a Recognised Standard — every AI claim traceable to a cited clause and page.
 
-<!-- TODO: replace with a real screenshot of the gap-analysis coverage matrix -->
+![Gap-analysis coverage matrix — coverage score, FULL/PARTIAL/MISSING donut, and requirement rows](./assets/gap-analysis-1.png)
 
-![Gap-analysis coverage matrix — PLACEHOLDER, replace with a real screenshot](./assets/coverage-matrix.png)
+![Gap-analysis coverage matrix — an expanded requirement row showing standard ⇄ procedure evidence and the recommended action](./assets/gap-analysis-2.png)
 
 **Live demo:** `https://TODO-demo-url.example.com` &nbsp;·&nbsp; **Mock login:** `admin` / `compliance-demo`
 _(Demo URL is a placeholder; credentials are configurable — see [Configuration](#configuration).)_
