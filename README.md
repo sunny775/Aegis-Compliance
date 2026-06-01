@@ -6,8 +6,8 @@
 
 ![Gap-analysis coverage matrix — an expanded requirement row showing standard ⇄ procedure evidence and the recommended action](./assets/gap-analysis-2.png)
 
-**Live demo:** `https://TODO-demo-url.example.com` &nbsp;·&nbsp; **Mock login:** `admin` / `compliance-demo`
-_(Demo URL is a placeholder; credentials are configurable — see [Configuration](#configuration).)_
+**Live demo:** https://aegis-compliance-web.vercel.app/login &nbsp;·&nbsp; **Mock login:** `admin` / `compliance-demo`
+_(Credentials are configurable — see [Configuration](#configuration).)_
 
 ---
 
