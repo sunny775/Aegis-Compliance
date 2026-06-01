@@ -50,13 +50,7 @@ export function documentRoutes(providers: Providers): Router {
   router.get(
     '/:id',
     asyncHandler(async (req, res) => {
-      const id = req.params.id!;
-      const document = await providers.documents.get(id);
-      const [summary, keyPoints] = await Promise.all([
-        providers.documents.getSummary(id),
-        providers.documents.getKeyPoints(id),
-      ]);
-      res.json({ ...document, summary, keyPoints });
+      res.json(await providers.documents.getDetail(req.params.id!));
     }),
   );
 

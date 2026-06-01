@@ -30,8 +30,10 @@ export interface DocumentRecord {
 }
 
 export interface DocumentDetail extends DocumentRecord {
-  summary: string;
+  summary?: string;
   keyPoints: KeyPoint[];
+  /** Set when AI summary/key points could not be produced (e.g. Claude rate limited). */
+  analysisError?: string;
 }
 
 export interface ChunkMetadata {

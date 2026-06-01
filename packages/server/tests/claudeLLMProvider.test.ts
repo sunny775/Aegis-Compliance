@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import Anthropic from '@anthropic-ai/sdk';
 import { ClaudeLLMProvider } from '../src/providers/ClaudeLLMProvider';
 import { ModelRouter } from '../src/config/modelRouter';
+import { LLMError, LLMUnavailableError } from '../src/http/errors';
 
 const router = new ModelRouter({ cheap: 'claude-haiku-4-5', reasoning: 'claude-sonnet-4-6' });
 
@@ -100,6 +102,46 @@ describe('ClaudeLLMProvider.complete', () => {
     });
     await provider.complete([{ role: 'user', content: 'q' }], { model: 'cheap', maxTokens: 50 });
     expect('temperature' in seen).toBe(false);
+  });
+
+  it('maps a workspace usage-cap error to a retriable LLMUnavailableError (not a raw SDK error)', async () => {
+    const body = {
+      type: 'error',
+      error: { type: 'invalid_request_error', message: 'You have reached your specified workspace API usage limits.' },
+    };
+    const { provider } = providerWith(() => {
+      throw new Anthropic.APIError(400, body, '400 ' + JSON.stringify(body), new Headers());
+    });
+
+    const err = await provider
+      .complete([{ role: 'user', content: 'x' }], { model: 'cheap', maxTokens: 50 })
+      .catch((e) => e);
+
+    expect(err).toBeInstanceOf(LLMUnavailableError);
+    expect(err.statusCode).toBe(503);
+    expect(err.message).toContain('usage limit');
+    expect(err.message).not.toContain('{'); // raw SDK envelope did not leak
+  });
+
+  it('maps a rate-limit (429) to LLMUnavailableError', async () => {
+    const { provider } = providerWith(() => {
+      throw new Anthropic.APIError(429, { error: { message: 'rate limited' } }, 'rate limited', new Headers());
+    });
+    const err = await provider
+      .complete([{ role: 'user', content: 'x' }], { model: 'cheap', maxTokens: 50 })
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(LLMUnavailableError);
+  });
+
+  it('maps other API errors to an opaque LLMError', async () => {
+    const { provider } = providerWith(() => {
+      throw new Anthropic.APIError(500, { error: { message: 'boom' } }, 'boom', new Headers());
+    });
+    const err = await provider
+      .complete([{ role: 'user', content: 'x' }], { model: 'cheap', maxTokens: 50 })
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(LLMError);
+    expect(err.statusCode).toBe(502);
   });
 
   it('throws when structured output is requested but no tool_use is returned', async () => {

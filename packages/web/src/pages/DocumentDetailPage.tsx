@@ -81,10 +81,14 @@ export function DocumentDetailPage() {
       </Tabs>
 
       <Panel active={tab === 0}>
-        <SummaryPanel loading={isLoading} summary={data?.summary} />
+        <SummaryPanel loading={isLoading} summary={data?.summary} analysisError={data?.analysisError} />
       </Panel>
       <Panel active={tab === 1}>
-        <KeyPointsPanel loading={isLoading} keyPoints={data?.keyPoints ?? []} />
+        <KeyPointsPanel
+          loading={isLoading}
+          keyPoints={data?.keyPoints ?? []}
+          analysisError={data?.analysisError}
+        />
       </Panel>
       <Panel active={tab === 2}>
         <Card>
@@ -125,7 +129,15 @@ function BackButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function SummaryPanel({ loading, summary }: { loading: boolean; summary?: string }) {
+function SummaryPanel({
+  loading,
+  summary,
+  analysisError,
+}: {
+  loading: boolean;
+  summary?: string;
+  analysisError?: string;
+}) {
   if (loading) {
     return (
       <Card>
@@ -138,7 +150,14 @@ function SummaryPanel({ loading, summary }: { loading: boolean; summary?: string
     );
   }
   if (!summary) {
-    return <EmptyState title="No summary available" description="This document has no extractable content." />;
+    return analysisError ? (
+      <EmptyState
+        title="Summary temporarily unavailable"
+        description="The AI service is currently unavailable. Reload to try again shortly."
+      />
+    ) : (
+      <EmptyState title="No summary available" description="This document has no extractable content." />
+    );
   }
   return (
     <Card>
@@ -157,9 +176,11 @@ function SummaryPanel({ loading, summary }: { loading: boolean; summary?: string
 function KeyPointsPanel({
   loading,
   keyPoints,
+  analysisError,
 }: {
   loading: boolean;
   keyPoints: { text: string; clauseRef?: string; page?: number }[];
+  analysisError?: string;
 }) {
   const theme = useTheme();
   if (loading) {
@@ -172,7 +193,14 @@ function KeyPointsPanel({
     );
   }
   if (keyPoints.length === 0) {
-    return <EmptyState title="No key points" description="Nothing was extracted for this document." />;
+    return analysisError ? (
+      <EmptyState
+        title="Key points temporarily unavailable"
+        description="The AI service is currently unavailable. Reload to try again shortly."
+      />
+    ) : (
+      <EmptyState title="No key points" description="Nothing was extracted for this document." />
+    );
   }
   return (
     <Stack spacing={1.5}>

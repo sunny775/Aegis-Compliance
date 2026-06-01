@@ -22,6 +22,18 @@ export class LLMError extends AppError {
   }
 }
 
+/**
+ * The upstream AI service is temporarily unavailable — rate limited, overloaded,
+ * or the workspace has hit its usage cap. Distinct from {@link LLMError} because
+ * it is transient and retriable: callers may degrade gracefully (e.g. serve a
+ * document without its AI summary) rather than failing outright.
+ */
+export class LLMUnavailableError extends AppError {
+  constructor(message: string) {
+    super('LLM_UNAVAILABLE', message, 503);
+  }
+}
+
 /** A requested resource (document, etc.) does not exist. */
 export class NotFoundError extends AppError {
   constructor(message: string) {

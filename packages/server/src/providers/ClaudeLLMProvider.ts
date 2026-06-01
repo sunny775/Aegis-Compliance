@@ -7,7 +7,7 @@ import type {
   LLMCompletion,
 } from './LLMProvider';
 import type { ModelRouter } from '../config/modelRouter';
-import { LLMError } from '../http/errors';
+import { LLMError, LLMUnavailableError } from '../http/errors';
 
 const DEFAULT_TOOL_NAME = 'record_structured_output';
 const DEFAULT_TOOL_DESCRIPTION = 'Record the result in the required structured schema.';
@@ -57,7 +57,12 @@ export class ClaudeLLMProvider implements LLMProvider {
       params.tool_choice = { type: 'tool', name: toolName };
     }
 
-    const response = await this.client.messages.create(params);
+    let response: Anthropic.Message;
+    try {
+      response = await this.client.messages.create(params);
+    } catch (err) {
+      throw this.translateError(err);
+    }
     return this.mapResponse(response, Boolean(options.jsonSchema));
   }
 
@@ -71,12 +76,41 @@ export class ClaudeLLMProvider implements LLMProvider {
     if (options.temperature !== undefined) params.temperature = options.temperature;
     if (options.system) params.system = this.buildSystem(options.system, options.cacheSystem ?? true);
 
-    const stream = await this.client.messages.create(params);
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        yield event.delta.text;
-      }
+    let stream: Awaited<ReturnType<typeof this.client.messages.create>>;
+    try {
+      stream = await this.client.messages.create(params);
+    } catch (err) {
+      throw this.translateError(err);
     }
+    try {
+      for await (const event of stream as AsyncIterable<Anthropic.MessageStreamEvent>) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          yield event.delta.text;
+        }
+      }
+    } catch (err) {
+      throw this.translateError(err);
+    }
+  }
+
+  /**
+   * Map an Anthropic SDK error onto a typed AppError so the SDK never leaks past
+   * this adapter (the §4.3 boundary contract) and the centralized error handler
+   * never has to dump a raw provider error. Transient conditions (rate limit,
+   * overload, workspace usage cap) become a retriable {@link LLMUnavailableError};
+   * everything else is an opaque {@link LLMError}. Non-SDK errors bubble unchanged.
+   */
+  private translateError(err: unknown): Error {
+    if (!(err instanceof Anthropic.APIError)) {
+      return err instanceof Error ? err : new LLMError('Unknown LLM provider error.');
+    }
+    const status = err.status ?? 0;
+    const detail = extractApiMessage(err);
+    const transient = status === 429 || status === 529 || /usage limit/i.test(detail);
+    if (transient) {
+      return new LLMUnavailableError(`The AI service is temporarily unavailable: ${detail}`);
+    }
+    return new LLMError(`Claude API request failed (${status || 'unknown'}): ${detail}`);
   }
 
   private toMessageParams(messages: LLMMessage[]): Anthropic.MessageParam[] {
@@ -118,4 +152,10 @@ export class ClaudeLLMProvider implements LLMProvider {
       stopReason: response.stop_reason,
     };
   }
+}
+
+/** Pull the human-readable message out of an SDK error body, hiding the raw "400 {…}" envelope. */
+function extractApiMessage(err: InstanceType<typeof Anthropic.APIError>): string {
+  const body = err.error as { error?: { message?: string } } | undefined;
+  return body?.error?.message ?? err.message;
 }
